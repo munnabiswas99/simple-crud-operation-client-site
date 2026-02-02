@@ -1,9 +1,11 @@
-import React, { use } from 'react';
+import React, { use, useState } from 'react';
 
 const Users = ({userPromise}) => {
 
     const initialUser = use(userPromise);
-    console.log(initialUser);
+    console.log(initialUser); 
+
+    const [users, setUsers] = useState(initialUser);
 
     const handleAddUser = e => {
         e.preventDefault();
@@ -24,10 +26,29 @@ const Users = ({userPromise}) => {
         .then(data => {
             console.log('Data after creating userin the DB', data);
             if(data.insertedId){
+                newUser._id = data.insertedId;
+                const newUsers = [...users, newUser];
+                setUsers(newUsers);
                 alert('user added successfully');
                 e.target.reset();
             }
         })
+    }
+
+    const handleDelete = (id) => {
+       console.log(id);
+       fetch(`http://localhost:3000/users/${id}`,{
+        method: 'DELETE'
+       })
+       .then(res => res.json())
+       .then(data => {
+            if(data.deletedCount){
+                const remainingUsers = users.filter(user => user._id !== id);
+                setUsers(remainingUsers);
+                console.log('After Delete', data);
+            }
+       })
+
     }
 
     return (
@@ -40,6 +61,11 @@ const Users = ({userPromise}) => {
                     <br />
                     <input type='submit' value="Add user" />
                 </form>
+            </div>
+            <div>
+                {
+                    users.map(user => <p key={user._id}>{user.name} <br /> {user.email} <button onClick={()=>handleDelete(user._id)}>x</button></p>)
+                }
             </div>
         </div>
     );
